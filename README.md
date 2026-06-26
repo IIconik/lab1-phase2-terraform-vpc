@@ -1,10 +1,10 @@
-# Lab 1 Phase 2 — Terraform VPC from scratch
+# Lab 1 — Phase 2 — Terraform VPC + Remote State
 
-> Création d'un VPC AWS complet en Infrastructure as Code avec Terraform.
+> Création d'un VPC AWS complet en Infrastructure as Code avec Terraform et configuration du remote state S3.
 > Premier lab de la **Phase 2 — Terraform**.
 
 [![Terraform](https://img.shields.io/badge/Terraform-v1.15.7-7B42BC?logo=terraform&logoColor=white)]()
-[![AWS](https://img.shields.io/badge/AWS-VPC-FF9900?logo=amazonaws&logoColor=white)]()
+[![AWS](https://img.shields.io/badge/AWS-VPC%20%2B%20S3-FF9900?logo=amazonaws&logoColor=white)]()
 [![Region](https://img.shields.io/badge/Region-eu--west--3-58A6FF)]()
 [![Status](https://img.shields.io/badge/Status-Validated-3FB950)]()
 
@@ -12,7 +12,7 @@
 
 ## 🎯 Objectif
 
-Reproduire en code Terraform l'infrastructure VPC créée manuellement en Phase 1, en appliquant les principes d'Infrastructure as Code.
+Reproduire en code Terraform le VPC créé manuellement en Phase 1, et configurer un remote state S3 pour permettre le travail en équipe.
 
 ## 🏗️ Infrastructure déployée
 
@@ -31,15 +31,33 @@ VPC 10.0.0.0/16
 
 ```
 lab1-phase2-terraform-vpc/
-├── main.tf          ← ressources AWS (provider, VPC, subnets, IGW, routing)
+├── main.tf          ← provider + VPC + subnets + IGW + route tables + backend S3
 ├── variables.tf     ← paramètres configurables
 ├── outputs.tf       ← valeurs exposées après apply
 └── .gitignore       ← exclut .terraform/ et *.tfstate
 ```
 
-## 🚀 Déploiement
+## 🔧 Remote State S3
 
-📄 **[Lab1_Phase2_Terraform_Detaille.pdf](./Lab1_Phase2_Terraform_Detaille.pdf)**
+Le state Terraform est stocké dans S3 pour permettre le travail en équipe :
+
+```hcl
+backend "s3" {
+  bucket       = "terraform-state-nathan-2701"
+  key          = "phase2/lab1/terraform.tfstate"
+  region       = "eu-west-3"
+  use_lockfile = true
+  encrypt      = true
+}
+```
+
+## 📄 Procédures
+
+📄 **[Lab1_Phase2_Terraform_Detaille.pdf](./Lab1_Phase2_Terraform_Detaille.pdf)** — VPC en Terraform (cours + procédure)
+
+📄 **[Proc_Remote_State_S3.pdf](./Proc_Remote_State_S3.pdf)** — Remote State S3 (cours + procédure)
+
+## 🚀 Déploiement
 
 ```bash
 # Initialiser Terraform
@@ -55,9 +73,9 @@ terraform apply
 terraform destroy
 ```
 
-## 📊 Outputs
+## 📊 Outputs après apply
 
-```hcl
+```
 igw_id             = "igw-0544fa6e0c0e72cef"
 private_subnet_ids = ["subnet-0290a7736fb59582e", "subnet-0233813e67fc8e042"]
 public_subnet_ids  = ["subnet-0d2608853e4837a93", "subnet-074026e378eb0c759"]
@@ -70,29 +88,37 @@ vpc_id             = "vpc-007ba14b76c14488b"
 - [x] `terraform plan` — 12 to add, 0 to change, 0 to destroy
 - [x] `terraform apply` — 12 ressources créées, outputs affichés
 - [x] Vérification console AWS — vpc-phase2-lab1 visible
-- [x] `terraform destroy` — 12 ressources supprimées
+- [x] Remote state visible dans S3 après apply
+- [x] Verrou `use_lockfile = true` fonctionnel
+- [x] `terraform destroy` — 12 ressources supprimées proprement
 
-## 🎓 Compétences mises en pratique
+## 🔍 Concepts clés appris
 
-- HCL (HashiCorp Configuration Language)
-- Variables Terraform (string, list, default)
-- Resources et références inter-ressources
-- Méta-argument count avec length()
-- Interpolation de variables dans les strings
-- Outputs Terraform
-- Workflow init → plan → apply → destroy
-- .gitignore pour exclure le state et les providers
+| Concept | Explication |
+|---------|-------------|
+| **HCL** | Langage de configuration HashiCorp |
+| **variable** | Paramètre configurable, défini une fois, utilisé partout |
+| **resource** | Ressource AWS à créer (aws_vpc, aws_subnet...) |
+| **count** | Crée N ressources identiques sans dupliquer le code |
+| **output** | Valeur affichée après apply, partageable entre modules |
+| **backend s3** | State stocké dans S3, partageable en équipe |
+| **use_lockfile** | Verrou S3 — empêche les apply simultanés |
 
 ## ⚙️ Prérequis
 
 ```bash
-# Terraform installé
 terraform version  # >= 1.0.0
-
-# AWS CLI configuré
-aws configure
-aws sts get-caller-identity
+aws sts get-caller-identity  # terraform-user configuré
 ```
+
+## 🎓 Compétences mises en pratique
+
+- Infrastructure as Code (IaC) avec Terraform
+- HCL : variables, resources, outputs, interpolation
+- Méta-argument count avec length()
+- Workflow init → plan → apply → destroy
+- Remote state S3 avec verrou
+- Migration state local → remote
 
 ---
 
