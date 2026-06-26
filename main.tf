@@ -5,12 +5,15 @@ terraform {
       version = "~> 5.0"
     }
   }
-}
 
-provider "aws" {
-  region = var.aws_region
+  backend "s3" {
+    bucket         = "terraform-state-nathan-2701"
+    key            = "phase2/lab1/terraform.tfstate"
+    region         = "eu-west-3"
+    use_lockfile = true
+    encrypt        = true
+  }
 }
-
 # ── VPC ──────────────────────────────────────────────────────
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
